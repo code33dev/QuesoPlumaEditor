@@ -61,7 +61,7 @@ void Editor::drawEditor()
     mvprintw(0, (screen_cols - filename.length() - (modified ? 11 : 9)) / 2, " Editing: %s %s ",
              filename.c_str(), modified ? "[Modified]" : "[Saved]");
     attroff(A_REVERSE | COLOR_PAIR(9));
-    for (int i = 1; i < screen_rows - 2; ++i)
+    for (int i = 1; i < screen_rows - 1; ++i)
     {
         int line_index = i + offset_y - 1;
         if (line_index >= (int)lines.size() || line_index < 0)
@@ -85,7 +85,7 @@ void Editor::drawEditor()
 
 void Editor::drawStatusBar()
 {
-    move(screen_rows - 2, 0);
+    move(screen_rows - 1, 0);
     clrtoeol();
     attron(A_REVERSE);
     printw("[File: %s] Cursor: (%d, %d) | Selection: %s | [Shift+B] Start Selection | [CTRL+B] Stop | [CTRL+C] Copy | [CTRL+X] Cut | [CTRL+V] Paste | [DEL] Delete",
