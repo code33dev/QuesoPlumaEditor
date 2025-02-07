@@ -28,6 +28,7 @@ private:
     void autoFormat();
 
     void drawStatusBar();
+    void drawMenuBar();
     void drawEditor();
     void highlightSyntax(int row, int col, const std::string &line);
     void handleMouseEvent(MEVENT event);
