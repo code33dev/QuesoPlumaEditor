@@ -51,46 +51,59 @@ void Editor::drawEditor()
 {
     werase(stdscr);
     getmaxyx(stdscr, screen_rows, screen_cols);
-    int numWidth = 6;
+    int numWidth = 6; // Width of line numbers
 
-    // Clear & Draw Full Title Bar
+    // Draw Menu Bar First
+    drawMenuBar();
+
+    // Draw Title Bar Below Menu Bar
     attron(A_REVERSE | COLOR_PAIR(9));
-    move(0, 0);
+    move(1, 0);
     for (int i = 0; i < screen_cols; ++i)
-        printw(" "); // Fill the whole row
-    mvprintw(0, (screen_cols - filename.length() - (modified ? 11 : 9)) / 2, " Editing: %s %s ",
+        printw(" "); // Fill the title bar
+    mvprintw(1, (screen_cols - filename.length() - (modified ? 11 : 9)) / 2, " Editing: %s %s ",
              filename.c_str(), modified ? "[Modified]" : "[Saved]");
     attroff(A_REVERSE | COLOR_PAIR(9));
-    for (int i = 1; i < screen_rows - 1; ++i)
+
+    // Draw Text Editor Content (starting from row 2, below menu & title)
+    for (int i = 2; i < screen_rows - 1; ++i) // Reserve 2 rows (menu + title)
     {
-        int line_index = i + offset_y - 1;
+        int line_index = i + offset_y - 2;
         if (line_index >= (int)lines.size() || line_index < 0)
             break;
 
-            move(i, 0);
-            clrtoeol();
-    
-            // **Make the line number background match the title bar**
-            attron(COLOR_PAIR(4));
-            printw("%*d | ", numWidth - 2, line_index + 1);
-            attroff(COLOR_PAIR(4));
-    
-            highlightSyntax(i, numWidth, lines[line_index]);
+        move(i, 0);
+        clrtoeol();
+
+        // **Make the line number background match the title bar**
+        attron(COLOR_PAIR(4));
+        printw("%*d | ", numWidth - 2, line_index + 1);
+        attroff(COLOR_PAIR(4));
+
+        highlightSyntax(i, numWidth, lines[line_index]);
     }
 
-    drawStatusBar();
-    move(cursor_y - offset_y + 1, cursor_x + numWidth);
+    drawStatusBar();                                    // Call status bar at the last row
+    move(cursor_y - offset_y + 2, cursor_x + numWidth); // Adjusted for menu & title bar
     refresh();
+}
+void Editor::drawMenuBar()
+{
+    move(0, 0); // Move to the first row (topmost)
+    clrtoeol();
+    attron(A_BOLD | A_REVERSE | COLOR_PAIR(9));
+    printw(" File  Edit  View  Help "); // Simple menu bar
+    attron(A_BOLD | A_REVERSE | COLOR_PAIR(9));
 }
 
 void Editor::drawStatusBar()
 {
     move(screen_rows - 1, 0);
     clrtoeol();
-    attron(A_REVERSE);
+    attron(A_BOLD | A_REVERSE | COLOR_PAIR(9));
     printw("[File: %s] Cursor: (%d, %d) | Selection: %s | [Shift+B] Start Selection | [CTRL+B] Stop | [CTRL+C] Copy | [CTRL+X] Cut | [CTRL+V] Paste | [DEL] Delete",
            filename.c_str(), cursor_y + 1, cursor_x, selecting ? "ON" : "OFF");
-    attroff(A_REVERSE);
+    attron(A_BOLD | A_REVERSE | COLOR_PAIR(9));
 }
 
 void Editor::highlightSyntax(int row, int col, const std::string &line)
