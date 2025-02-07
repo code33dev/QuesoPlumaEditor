@@ -92,7 +92,7 @@ void Editor::drawMenuBar()
     move(0, 0); // Move to the first row (topmost)
     clrtoeol();
     attron(A_BOLD | A_REVERSE | COLOR_PAIR(9));
-    printw(" File  Edit  View  Help "); // Simple menu bar
+    printw(" Queso Pluma PLX viewer -> Written by: El Alberto =D "); // Simple menu bar
     attron(A_BOLD | A_REVERSE | COLOR_PAIR(9));
 }
 
@@ -235,18 +235,86 @@ void Editor::handleInput()
 
         switch (ch)
         {
-        case KEY_UP:
-            if (cursor_y > 0)
-                cursor_y--;
+        case KEY_HOME: // Move to the beginning of the line
+            cursor_x = 0;
+            break;
+
+        case KEY_END: // Move to the end of the line
+            cursor_x = lines[cursor_y].size();
+            break;
+
+        case KEY_PPAGE: // Page Up (Move up by screen height)
+            cursor_y -= (screen_rows - 2);
+            if (cursor_y < 0)
+                cursor_y = 0;
+            if (cursor_x > (int)lines[cursor_y].size())
+                cursor_x = lines[cursor_y].size(); // Adjust if shorter
             if (cursor_y < offset_y)
-                offset_y--;
+                offset_y = cursor_y;
             break;
-        case KEY_DOWN:
-            if (cursor_y < (int)lines.size() - 1)
-                cursor_y++;
+
+        case KEY_NPAGE: // Page Down (Move down by screen height)
+            cursor_y += (screen_rows - 2);
+            if (cursor_y >= (int)lines.size())
+                cursor_y = lines.size() - 1;
+            if (cursor_x > (int)lines[cursor_y].size())
+                cursor_x = lines[cursor_y].size(); // Adjust if shorter
             if (cursor_y >= offset_y + screen_rows - 2)
-                offset_y++;
+                offset_y = cursor_y - screen_rows + 3;
             break;
+        case KEY_UP: // Move cursor up
+            if (cursor_y > 0)
+            {
+                cursor_y--;
+                if (lines[cursor_y].empty()) // 🛠 If line is empty, set cursor_x to 0
+                    cursor_x = 0;
+                else if (cursor_x > (int)lines[cursor_y].size()) // Move to last character if needed
+                    cursor_x = lines[cursor_y].size();
+                else if (cursor_x < (int)lines[cursor_y].size()) // Move to last character if needed
+                    cursor_x = lines[cursor_y].size();
+
+                if (cursor_y < offset_y)
+                    offset_y--;
+            }
+            break;
+
+        case KEY_DOWN: // Move cursor down
+            if (cursor_y < (int)lines.size() - 1)
+            {
+                cursor_y++;
+                if (lines[cursor_y].empty()) // 🛠 If line is empty, set cursor_x to 0
+                    cursor_x = 0;
+                else if (cursor_x > (int)lines[cursor_y].size()) // Move to last character if needed
+                    cursor_x = lines[cursor_y].size();
+                else if (cursor_x < (int)lines[cursor_y].size()) // Move to last character if needed
+                    cursor_x = lines[cursor_y].size();
+                if (cursor_y >= offset_y + screen_rows - 2)
+                    offset_y++;
+            }
+            break;
+
+            // case KEY_UP:
+            //     if (cursor_y > 0)
+            //         cursor_y--;
+            //     if (cursor_y < offset_y)
+            //         offset_y--;
+            //     break;
+            // case KEY_DOWN:
+            //     if (cursor_y < (int)lines.size() - 1)
+            //     {
+            //         cursor_y++;
+
+            //         // Ensure cursor_x is within the bounds of the new line
+            //         if (cursor_x > (int)lines[cursor_y].size())
+            //         {
+            //             cursor_x = lines[cursor_y].size(); // Move to the last character
+            //         }
+            //     }
+            //     // Adjust scrolling if necessary
+            //     if (cursor_y >= offset_y + screen_rows - 2)
+            //         offset_y++;
+            //     break;
+
         case KEY_LEFT:
             if (cursor_x > 0)
                 cursor_x--;
@@ -305,12 +373,31 @@ void Editor::handleInput()
                 modified = true; // Mark as modified
             }
             break;
+        case KEY_IC: // 🛠 Insert key to toggle overwrite mode
+            overwrite_mode = !overwrite_mode;
+            break;
 
         default:
-            if (ch >= 32 && ch <= 126) // Typing new characters
+            if (ch >= 32 && ch <= 126) // 🛠 Handle printable characters
             {
-                lines[cursor_y].insert(cursor_x, 1, ch);
-                cursor_x++;
+                // 🛠 Ensure the line expands with spaces if cursor_x is beyond the current line length
+                if (cursor_x >= (int)lines[cursor_y].size())
+                {
+                    lines[cursor_y].resize(cursor_x, ' '); // Fill with spaces up to cursor_x
+                }
+
+                if (overwrite_mode && cursor_x < (int)lines[cursor_y].size())
+                {
+                    // 🛠 Overwrite Mode: Replace the character at cursor_x
+                    lines[cursor_y][cursor_x] = ch;
+                }
+                else
+                {
+                    // 🛠 Insert Mode: Insert character at cursor_x
+                    lines[cursor_y].insert(cursor_x, 1, ch);
+                }
+
+                cursor_x++;      // Move cursor forward
                 modified = true; // Mark as modified
             }
             break;

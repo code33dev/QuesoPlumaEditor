@@ -24,6 +24,7 @@ private:
     bool selecting = false;
     std::string filename;
     bool modified = false;
+    bool overwrite_mode = false; // 🛠 Tracks Insert/Overwrite Mode
 
     void autoFormat();
 
