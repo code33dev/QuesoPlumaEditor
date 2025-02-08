@@ -108,20 +108,28 @@ void Editor::drawStatusBar()
 
 void Editor::highlightSyntax(int row, int col, const std::string &line)
 {
-    static const std::regex control_structures(R"(\b(if|else|switch|case|for|while|do|break|continue|return|goto|try|catch|throw)\b)");
-    static const std::regex data_types(R"(\b(int|float|double|char|bool|void|short|long|signed|unsigned|wchar_t|auto|decltype|struct|union|enum|class|template|typename|concept)\b)");
-    static const std::regex operators_modifiers(R"(\b(const|static|inline|explicit|virtual|volatile|mutable|constexpr|final|override|private|public|protected|friend|typedef|using|alignas|alignof|sizeof|typeof|thread_local|reinterpret_cast|static_cast|dynamic_cast|const_cast|new|delete|operator|co_await|co_yield|co_return)\b)");
-
+    static const std::regex control_structures(R"(\b(IF|THEN|ELSE|DO|END|SELECT|WHEN|OTHERWISE|LEAVE|ITERATE|CALL|RETURN|GOTO|ON ERROR)\b)");
+    static const std::regex data_types(R"(\b(FIXED|FLOAT|DECIMAL|CHARACTER|BIT|LABEL|FILE|ENTRY|POINTER|PICTURE|AUTOMATIC|STATIC|CONTROLLED|BASED|DEFINED)\b)");
+    static const std::regex operators_modifiers(R"(\b(CONST|STATIC|INLINE|EXPLICIT|VIRTUAL|VOLATILE|MUTABLE|FINAL|OVERRIDE|PRIVATE|PUBLIC|PROTECTED|FRIEND|TYPEDEF|USING|ALIGNAS|ALIGNOF|SIZEOF|THREAD_LOCAL|NEW|DELETE|OPERATOR)\b)");
+    
     // Fix for `std::sregex_iterator`, `std::vector`, etc.
-    static const std::regex stl_methods(R"(\b(std::(?:[a-zA-Z_][a-zA-Z0-9_]*))\b)");
-
-    static const std::regex preprocessor(R"(\b(#include|#define|#ifdef|#ifndef|#endif|#pragma|#error|#line|#if|#else|#elif|#endif|#undef)\b)");
-    static const std::regex literals(R"(\b(true|false|nullptr)\b)");
-    static const std::regex keywords(R"(\b(static_assert|typeid|typename|namespace|export|this|sizeof|constexpr|alignof|decltype|concept|noexcept|requires|explicit)\b)");
-
+    static const std::regex pl1_builtins(R"(\b(DECLARE|PROC|ENTRY|CALL|PUT|GET|ON|IF|DO|END|GO TO|SELECT|WHEN|OTHERWISE|RETURN)\b)");
+    
+    static const std::regex preprocessor(R"(\b(%INCLUDE|%DECLARE|%IF|%THEN|%ELSE|%DO|%END)\b)");
+    static const std::regex literals(R"(\b(TRUE|FALSE|NULL)\b)");
+    static const std::regex keywords(R"(\b(STATIC_ASSERT|TYPEID|NAMESPACE|EXPORT|THIS|SIZEOF|ALIGNOF|DECLTYPE|CONCEPT|NOEXCEPT|REQUIRES|EXPLICIT)\b)");
     mvprintw(row, col, "%s", line.c_str());
 
-    std::sregex_iterator it(line.begin(), line.end(), control_structures), end;
+
+    std::sregex_iterator it(line.begin(), line.end(), pl1_builtins), end;
+    for (; it != end; ++it)
+    {
+        attron(COLOR_PAIR(4));
+        mvprintw(row, col + it->position(), "%s", it->str().c_str());
+        attroff(COLOR_PAIR(4));
+    }
+    
+    it = std::sregex_iterator(line.begin(), line.end(), control_structures), end;
     for (; it != end; ++it)
     {
         attron(COLOR_PAIR(2));
@@ -145,13 +153,13 @@ void Editor::highlightSyntax(int row, int col, const std::string &line)
         attroff(COLOR_PAIR(4));
     }
 
-    it = std::sregex_iterator(line.begin(), line.end(), stl_methods);
-    for (; it != end; ++it)
-    {
-        attron(COLOR_PAIR(5));
-        mvprintw(row, col + it->position(), "%s", it->str().c_str());
-        attroff(COLOR_PAIR(5));
-    }
+    // it = std::sregex_iterator(line.begin(), line.end(), stl_methods);
+    // for (; it != end; ++it)
+    // {
+    //     attron(COLOR_PAIR(5));
+    //     mvprintw(row, col + it->position(), "%s", it->str().c_str());
+    //     attroff(COLOR_PAIR(5));
+    // }
 
     it = std::sregex_iterator(line.begin(), line.end(), preprocessor);
     for (; it != end; ++it)
